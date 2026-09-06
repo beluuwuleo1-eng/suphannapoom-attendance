@@ -1,79 +1,98 @@
 <!doctype html>
-<html lang="en">
+<html lang="th">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#0b1020" />
-    <meta name="description" content="A small-group GitHub project dashboard." />
-    <title>Orbit · GitHub project dashboard</title>
+    <meta name="theme-color" content="#f4f1ea" />
+    <meta name="description" content="ระบบเช็กชื่อนักเรียน โรงเรียนสุพรรณภูมิ" />
+    <title>เช็กชื่อ · โรงเรียนสุพรรณภูมิ</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Prompt:wght@500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <div class="app-shell">
       <header class="topbar">
-        <a class="brand" href="./" aria-label="Orbit home">
-          <span class="brand-mark" aria-hidden="true">✦</span>
-          <span>Orbit</span>
+        <a class="brand" href="./" aria-label="หน้าหลักระบบเช็กชื่อ">
+          <span class="brand-mark" aria-hidden="true">ส</span>
+          <span><strong>เช็กชื่อ</strong><small>โรงเรียนสุพรรณภูมิ</small></span>
         </a>
         <div class="topbar-actions">
-          <span class="live-pill"><span class="live-dot"></span> Live sync</span>
-          <a class="icon-link" id="repo-link" href="#" target="_blank" rel="noreferrer">Open repository <span aria-hidden="true">↗</span></a>
+          <span class="sync-status" id="sync-status"><i></i>พร้อมใช้งาน</span>
+          <button class="icon-button" id="theme-toggle" type="button" aria-label="สลับโหมดสี">◐</button>
+          <a class="github-link" href="https://github.com/beluuwuleo1-eng/suphannapoom-attendance" target="_blank" rel="noreferrer">คู่มือบน GitHub ↗</a>
         </div>
       </header>
 
       <main>
-        <section class="hero">
+        <section class="welcome-row">
           <div>
-            <p class="eyebrow">Small group workspace</p>
-            <h1 id="repo-name">Loading repository…</h1>
-            <p class="hero-copy">A calm view of what needs attention, what’s being discussed, and what shipped recently.</p>
+            <p class="eyebrow">ระบบบันทึกการมาเรียน</p>
+            <h1>สวัสดีค่ะ คุณครู <span aria-hidden="true">👋</span></h1>
+            <p class="lede">บันทึกการเข้าเรียนของวันนี้ให้เรียบร้อยในไม่กี่ขั้นตอน</p>
           </div>
-          <div class="hero-actions">
-            <button class="button button-primary" id="new-issue" type="button">＋ New issue</button>
-            <button class="button button-secondary" id="refresh" type="button">↻ Refresh</button>
-          </div>
+          <div class="date-stamp"><span>วันเปิดเรียน</span><strong id="today-label">—</strong></div>
         </section>
 
-        <div id="notice" class="notice" role="status" hidden></div>
-
-        <section class="stats-grid" aria-label="Repository overview">
-          <article class="stat-card accent-purple"><span class="stat-label">Open todos</span><strong id="open-count">—</strong><span class="stat-meta">Issues needing attention</span></article>
-          <article class="stat-card accent-teal"><span class="stat-label">Closed</span><strong id="closed-count">—</strong><span class="stat-meta">Completed issues</span></article>
-          <article class="stat-card accent-orange"><span class="stat-label">Questions & requests</span><strong id="question-count">—</strong><span class="stat-meta">Community conversations</span></article>
-          <article class="stat-card accent-blue"><span class="stat-label">Last synced</span><strong id="sync-time">—</strong><span class="stat-meta" id="poll-copy">Every 12 seconds</span></article>
-        </section>
-
-        <div class="content-grid">
-          <section class="panel todos-panel">
-            <div class="panel-heading">
-              <div><p class="eyebrow">The work queue</p><h2>Issues as todos</h2></div>
-              <a class="text-link" id="all-issues" href="#" target="_blank" rel="noreferrer">View all <span aria-hidden="true">→</span></a>
-            </div>
-            <div class="filter-row" role="group" aria-label="Filter issues">
-              <button class="filter active" data-filter="open" type="button">Open</button>
-              <button class="filter" data-filter="closed" type="button">Closed</button>
-              <button class="filter" data-filter="all" type="button">All</button>
-            </div>
-            <div id="issues-list" class="issue-list" aria-live="polite"></div>
-          </section>
-
-          <aside class="panel questions-panel">
-            <div class="panel-heading">
-              <div><p class="eyebrow">Ask the group</p><h2>Questions & requests</h2></div>
-              <span class="count-badge" id="question-badge">—</span>
-            </div>
-            <p class="panel-intro">Open issues tagged <strong>question</strong>, <strong>request</strong>, or <strong>help wanted</strong>.</p>
-            <div id="questions-list" class="question-list" aria-live="polite"></div>
-            <a class="button button-quiet full-width" id="new-question" href="#" target="_blank" rel="noreferrer">＋ Ask a question on GitHub</a>
-            <p class="api-note">GitHub Discussions can require authentication via the public API, so this dashboard uses labeled issues as a token-free alternative.</p>
-          </aside>
+        <div class="tabs" role="tablist" aria-label="มุมมองระบบ">
+          <button class="tab active" id="teacher-tab" role="tab" aria-selected="true" aria-controls="teacher-view" type="button">บันทึกการเข้าเรียน</button>
+          <button class="tab" id="admin-tab" role="tab" aria-selected="false" aria-controls="admin-view" type="button">ภาพรวมผู้ดูแลระบบ</button>
         </div>
+
+        <section id="teacher-view" role="tabpanel" aria-labelledby="teacher-tab">
+          <div class="toolbar panel">
+            <label class="field"><span>เลือกห้องเรียน</span><select id="class-select" aria-label="เลือกห้องเรียน"></select></label>
+            <label class="field"><span>วันที่</span><input id="date-select" type="date" aria-label="เลือกวันที่" /></label>
+            <div class="toolbar-actions">
+              <button class="button button-quiet" id="mark-all-present" type="button">✓ มาเรียนทั้งหมด</button>
+              <button class="button button-outline" id="clear-all" type="button">ล้างทั้งหมด</button>
+            </div>
+          </div>
+
+          <div class="summary-grid" id="summary-grid" aria-label="สรุปการเข้าเรียน"></div>
+
+          <div class="roster-layout">
+            <section class="panel roster-panel">
+              <div class="panel-heading">
+                <div><p class="eyebrow">รายชื่อนักเรียน</p><h2 id="roster-title">ห้อง 6/1</h2></div>
+                <span class="completion" id="completion-label">0 / 40 เช็กแล้ว</span>
+              </div>
+              <div class="progress-track" aria-hidden="true"><span id="completion-bar"></span></div>
+              <div class="roster-tools">
+                <label class="search-field"><span class="sr-only">ค้นหานักเรียน</span><span aria-hidden="true">⌕</span><input id="student-search" type="search" placeholder="ค้นหาชื่อหรือลำดับ…" /></label>
+                <select id="status-filter" aria-label="กรองตามสถานะ"><option value="all">ทุกสถานะ</option><option value="unmarked">ยังไม่ได้เช็ก</option><option value="present">มาเรียน</option><option value="absent">ขาดเรียน</option><option value="sick">ลาป่วย</option><option value="leave">ลากิจ</option><option value="late">มาสาย</option></select>
+              </div>
+              <div id="roster-list" class="roster-list" aria-live="polite"></div>
+            </section>
+
+            <aside class="panel save-panel">
+              <p class="eyebrow">บันทึกวันนี้</p>
+              <h2 id="save-title">ห้อง 6/1</h2>
+              <p class="save-copy">ตรวจสอบสถานะของนักเรียนให้ครบ แล้วกดบันทึกเพื่อเก็บข้อมูลลงในเครื่องนี้</p>
+              <div class="save-meta"><span>แก้ไขล่าสุด</span><strong id="last-saved">ยังไม่มีข้อมูล</strong></div>
+              <button class="button button-primary full-width" id="save-button" type="button">บันทึกการเข้าเรียน</button>
+              <p class="privacy-note"><span aria-hidden="true">⌁</span> ข้อมูลเก็บในเบราว์เซอร์นี้ ไม่ส่งชื่อหรือนักเรียนออกไปภายนอก</p>
+            </aside>
+          </div>
+        </section>
+
+        <section id="admin-view" class="admin-view" role="tabpanel" aria-labelledby="admin-tab" hidden>
+          <div class="admin-heading"><div><p class="eyebrow">สำหรับผู้ดูแลระบบ</p><h2>ภาพรวมการเข้าเรียน</h2><p class="panel-intro">ตรวจสอบความเรียบร้อยของทุกห้องเรียนและดาวน์โหลดรายงานได้จากที่นี่</p></div><button class="button button-primary" id="export-csv" type="button">↓ ส่งออก CSV</button></div>
+          <div class="admin-filters panel">
+            <label class="field"><span>วันที่สรุป</span><input id="admin-date" type="date" /></label>
+            <label class="field"><span>ห้องเรียน</span><select id="admin-class"><option value="all">ทุกห้องเรียน</option></select></label>
+            <div class="admin-refresh"><span class="sync-status"><i></i>อัปเดตอัตโนมัติทุก 30 วินาที</span><button class="button button-outline" id="admin-refresh" type="button">↻ รีเฟรช</button></div>
+          </div>
+          <div class="admin-stats" id="admin-stats"></div>
+          <div class="panel table-panel"><div class="panel-heading"><div><p class="eyebrow">สถานะรายห้อง</p><h2>วันนี้ในทุกห้องเรียน</h2></div><span class="count-badge" id="admin-count">8 ห้อง</span></div><div class="table-wrap"><table><thead><tr><th>ห้อง</th><th>นักเรียน</th><th>มาเรียน</th><th>ขาด/ลา</th><th>มาสาย</th><th>ความคืบหน้า</th></tr></thead><tbody id="admin-table"></tbody></table></div></div>
+          <div class="panel monthly-panel"><div class="panel-heading"><div><p class="eyebrow">แนวโน้ม</p><h2>สรุปรายเดือน</h2></div><span class="month-label" id="month-label">—</span></div><div id="monthly-summary" class="monthly-summary"></div></div>
+        </section>
       </main>
-      <footer><span>Orbit is powered by the public GitHub API.</span><span>Updates automatically · <a href="https://docs.github.com/en/rest" target="_blank" rel="noreferrer">API docs ↗</a></span></footer>
+
+      <footer><span>เช็กชื่อ · โรงเรียนสุพรรณภูมิ</span><span>ระบบทำงานแบบออฟไลน์ได้ · <a href="README.md">อ่านวิธีใช้งาน</a></span></footer>
     </div>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
     <script src="config.js"></script>
     <script src="app.js"></script>
   </body>

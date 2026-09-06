@@ -1,35 +1,31 @@
-# Orbit · GitHub project dashboard
+# เช็กชื่อ · โรงเรียนสุพรรณภูมิ
 
-Orbit is a small-group, GitHub-only dashboard that runs as a static site on GitHub Pages. It reads public repository issues through the unauthenticated GitHub REST API and refreshes automatically every 12 seconds. Pull requests are excluded from the todo list.
+เว็บแอปภาษาไทยสำหรับบันทึกการเข้าเรียนของนักเรียนชั้น ม.6/1–ม.6/8 ออกแบบให้เป็นเว็บสแตติก จึงใช้งานได้ฟรีบน GitHub Pages โดยไม่ต้องมีเซิร์ฟเวอร์หรือฐานข้อมูลเสียเงิน
 
-## Configure
+## วิธีตั้งค่า
 
-Edit [`config.js`](./config.js) before publishing:
+แก้ไข `config.js` เพื่อเปลี่ยนจำนวนห้องและจำนวนนักเรียนต่อห้องได้ โครงสร้างรายชื่ออยู่ในฟังก์ชัน `rosterFor` ของ `app.js` ซึ่งตอนนี้สร้างชื่อ placeholder เช่น “นักเรียนตัวอย่าง 01” ให้แทนที่ด้วยรายชื่อที่โรงเรียนดูแลเองก่อนใช้งานจริง ห้าม commit ชื่อจริงหรือข้อมูลส่วนบุคคลลงใน repository สาธารณะ
 
-```js
-window.DASHBOARD_CONFIG = {
-  owner: "your-github-org-or-user",
-  repository: "your-public-repository",
-  pollIntervalMs: 12000,
-  issueLimit: 30,
-  questionLabels: ["question", "request", "help wanted"],
-};
-```
+## วิธีใช้งานสำหรับครู
 
-Do not add a token to this file. Anything shipped to GitHub Pages is public.
+1. เปิดแท็บ **บันทึกการเข้าเรียน** เลือกห้องเรียนและวันที่
+2. กดสถานะของนักเรียนแต่ละคน: มา, ขาด, ป่วย, ลา หรือสาย ใช้ “มาเรียนทั้งหมด” เพื่อกรอกอย่างรวดเร็ว แล้วแก้เฉพาะคนที่ไม่มา
+3. กด **บันทึกการเข้าเรียน** ข้อมูลจะถูกเก็บไว้ใน `localStorage` ของเบราว์เซอร์เครื่องนั้น และกลับมาแก้ไขได้ภายหลัง
+4. ใช้ช่องค้นหาหรือตัวกรองสถานะเพื่อทำงานบนโทรศัพท์ได้สะดวก
 
-## Publish with GitHub Pages
+## วิธีใช้งานสำหรับผู้ดูแลระบบ
 
-1. Push these files to a GitHub repository (the repository itself may be separate from the one being displayed).
-2. In **Settings → Pages**, set **Source** to **Deploy from a branch**, choose the default branch and `/ (root)`, then select **Save**.
-3. Wait for the Pages deployment, then open the generated Pages URL. No build command or package installation is required.
+เปิดแท็บ **ภาพรวมผู้ดูแลระบบ** เพื่อดูยอดรวมทุกห้อง กรองวันที่หรือห้องเรียน ตรวจสอบว่าครบทุกคนแล้วหรือยัง และกด **ส่งออก CSV** เพื่อดาวน์โหลดรายงานสำหรับเปิดใน Excel หรือ Google Sheets
 
-## How the dashboard works
+## Deploy ด้วย GitHub Pages
 
-- **Issues as todos** shows open, closed, and all issues with labels, assignees, timestamps, and direct GitHub links.
-- **Questions & requests** uses issues labeled `question`, `request`, or `help wanted`. This is the GitHub-only fallback for Discussions because reading Discussions is not consistently available through the unauthenticated REST API. Change `questionLabels` to match your team’s labels.
-- **New issue** and **Ask a question** open GitHub’s own forms. People need a GitHub account and repository permission to create or edit items.
+1. สร้าง public repository ชื่อ `suphannapoom-attendance` แล้ว push ไฟล์ชุดนี้ขึ้น branch `main`
+2. ไปที่ **Settings → Pages → Build and deployment**
+3. เลือก **Deploy from a branch**, branch `main`, โฟลเดอร์ `/ (root)` แล้วกด Save
+4. รอ GitHub Actions deploy แล้วเปิด URL ที่ GitHub แสดง
 
-## Limitations
+## ข้อจำกัดด้านข้อมูลและความเป็นส่วนตัว
 
-The site only displays public data and never exposes a credential. Unauthenticated GitHub API requests are rate-limited (typically 60 requests per hour per IP). Polling is near-realtime, not a push stream, and may stop updating after the limit is reached. GitHub Pages is static hosting, so private repositories, server-side secrets, webhooks, and authenticated Discussions are intentionally not supported.
+GitHub Pages เป็น static hosting และ browser ที่ไม่มี token ไม่สามารถเขียนไฟล์หรือ commit กลับ repository ได้อย่างปลอดภัย แอปนี้จึงเก็บข้อมูลการเข้าเรียนไว้ในเครื่องของผู้ใช้แต่ละคน ไม่ได้ sync ข้ามเครื่องหรือระหว่างครูโดยอัตโนมัติ การรีเซ็ต browser, ล้าง site data หรือเปลี่ยนอุปกรณ์อาจทำให้ข้อมูลหาย ควรส่งออก CSV เป็นระยะและเก็บในพื้นที่ของโรงเรียนที่มีสิทธิ์เข้าถึง
+
+แอปไม่มี GitHub token, password หรือ API key ใน frontend และไม่มีการส่งข้อมูลนักเรียนไปยังบริการภายนอก หากต้องการระบบหลายเครื่องจริง ควรเพิ่ม backend ที่มี authentication และฐานข้อมูลตามนโยบายคุ้มครองข้อมูลของโรงเรียน ซึ่ง GitHub Pages เพียงอย่างเดียวทำไม่ได้
