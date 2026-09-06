@@ -8,4 +8,8 @@ window.ATTENDANCE_CONFIG = {
   ],
   // Replace the placeholder roster in app.js before using the app with real data.
   rosterPrefix: "นักเรียน",
+  // Add the Supabase project URL and anon key to sync across devices.
+  // Never put a service_role key here.
+  supabaseUrl: "",
+  supabaseAnonKey: "",
 };

@@ -13,6 +13,9 @@
   const $ = (selector) => document.querySelector(selector);
   const storageKey = "suphannapoom-attendance-v1";
   const savedTimesKey = "suphannapoom-attendance-saved-times-v1";
+  const supabaseUrl = String(config.supabaseUrl || "").replace(/\/$/, "");
+  const supabaseAnonKey = String(config.supabaseAnonKey || "");
+  const remoteEnabled = Boolean(supabaseUrl && supabaseAnonKey);
   const today = new Date();
   const isoDate = (date) => new Date(date).toISOString().slice(0, 10);
   const dateKey = isoDate(today);
@@ -24,10 +27,40 @@
   function loadSavedTimes() {
     try { return JSON.parse(localStorage.getItem(savedTimesKey) || "{}"); } catch (error) { return {}; }
   }
-  function saveAttendance() {
+  function saveLocalAttendance() {
     localStorage.setItem(storageKey, JSON.stringify(state.attendance));
     localStorage.setItem(savedTimesKey, JSON.stringify(state.lastSaved));
   }
+  function supabaseHeaders() {
+    return { apikey: supabaseAnonKey, Authorization: `Bearer ${supabaseAnonKey}`, "Content-Type": "application/json" };
+  }
+  async function loadRemoteAttendance() {
+    if (!remoteEnabled) return;
+    const response = await fetch(`${supabaseUrl}/rest/v1/attendance?select=attendance_date,class_id,student_id,status,updated_at`, { headers: supabaseHeaders() });
+    if (!response.ok) throw new Error("โหลดข้อมูลจากฐานข้อมูลไม่ได้");
+    const rows = await response.json();
+    state.attendance = {};
+    rows.forEach((row) => {
+      const key = `${row.attendance_date}|${row.class_id}`;
+      state.attendance[key] ||= {};
+      state.attendance[key][row.student_id] = row.status;
+      state.lastSaved[key] = row.updated_at;
+    });
+    saveLocalAttendance();
+  }
+  async function syncRemote(classId = state.selectedClass, date = state.selectedDate) {
+    if (!remoteEnabled) return;
+    const records = state.attendance[currentKey(classId, date)] || {};
+    const rows = Object.entries(records).map(([studentId, status]) => ({ attendance_date: date, class_id: classId, student_id: studentId, status }));
+    const response = await fetch(`${supabaseUrl}/rest/v1/attendance?on_conflict=attendance_date,class_id,student_id`, { method: "POST", headers: { ...supabaseHeaders(), Prefer: "resolution=merge-duplicates,return=minimal" }, body: JSON.stringify(rows) });
+    if (!response.ok) throw new Error("บันทึกข้อมูลลงฐานข้อมูลไม่ได้");
+  }
+  async function clearRemote(classId = state.selectedClass, date = state.selectedDate) {
+    if (!remoteEnabled) return;
+    const response = await fetch(`${supabaseUrl}/rest/v1/attendance?attendance_date=eq.${encodeURIComponent(date)}&class_id=eq.${encodeURIComponent(classId)}`, { method: "DELETE", headers: supabaseHeaders() });
+    if (!response.ok) throw new Error("ล้างข้อมูลในฐานข้อมูลไม่ได้");
+  }
+  function saveAttendance() { saveLocalAttendance(); }
   function rosterFor(classId) {
     const classConfig = classes.find((item) => item.id === classId) || { size: 40 };
     return Array.from({ length: classConfig.size }, (_, index) => ({ id: `${classId}-${index + 1}`, number: index + 1, name: `${config.rosterPrefix || "นักเรียน"} ${index + 1}` }));
@@ -83,7 +116,8 @@
       recordsForKey[button.dataset.student] = button.dataset.status;
       state.attendance[currentKey()] = recordsForKey;
       state.lastSaved[currentKey()] = new Date().toISOString();
-      saveAttendance();
+      saveLocalAttendance();
+      syncRemote().catch(() => showToast("บันทึกในเครื่องแล้ว แต่ซิงก์ฐานข้อมูลไม่สำเร็จ"));
       renderRoster();
     }));
     const saved = state.lastSaved[currentKey()];
@@ -94,12 +128,14 @@
     rosterFor(state.selectedClass).forEach((student) => { if (status) records[student.id] = status; });
     state.attendance[currentKey()] = records;
     state.lastSaved[currentKey()] = new Date().toISOString();
-    saveAttendance();
+    saveLocalAttendance();
+    (status ? syncRemote() : clearRemote()).catch(() => showToast("บันทึกในเครื่องแล้ว แต่ซิงก์ฐานข้อมูลไม่สำเร็จ"));
     renderRoster();
   }
   function saveCurrent() {
     state.lastSaved[currentKey()] = new Date().toISOString();
-    saveAttendance();
+    saveLocalAttendance();
+    syncRemote().catch(() => showToast("บันทึกในเครื่องแล้ว แต่ซิงก์ฐานข้อมูลไม่สำเร็จ"));
     renderRoster();
     showToast(`บันทึกห้อง ${state.selectedClass} เรียบร้อยแล้ว`);
   }
@@ -138,6 +174,9 @@
 
   $("#today-label").textContent = formatThaiDate(dateKey);
   populateSelects(); renderRoster(); renderAdmin();
+  if (remoteEnabled) {
+    loadRemoteAttendance().then(() => { renderRoster(); renderAdmin(); showToast("เชื่อมต่อฐานข้อมูลแล้ว"); }).catch(() => showToast("ใช้ข้อมูลในเครื่องชั่วคราว เพราะเชื่อมต่อฐานข้อมูลไม่ได้"));
+  }
   $("#class-select").addEventListener("change", (event) => { state.selectedClass = event.target.value; renderRoster(); });
   $("#date-select").addEventListener("change", (event) => { state.selectedDate = event.target.value; renderRoster(); });
   $("#student-search").addEventListener("input", renderRoster); $("#status-filter").addEventListener("change", renderRoster);
@@ -147,5 +186,5 @@
   $("#admin-date").addEventListener("change", renderAdmin); $("#admin-class").addEventListener("change", renderAdmin); $("#admin-refresh").addEventListener("click", renderAdmin); $("#export-csv").addEventListener("click", exportCsv);
   $("#theme-toggle").addEventListener("click", () => { document.body.classList.toggle("dark"); localStorage.setItem("attendance-theme", document.body.classList.contains("dark") ? "dark" : "light"); });
   if (localStorage.getItem("attendance-theme") === "dark") document.body.classList.add("dark");
-  window.setInterval(() => { if (!document.hidden) { state.attendance = loadAttendance(); state.lastSaved = loadSavedTimes(); renderRoster(); if (!$("#admin-view").hidden) renderAdmin(); } }, Math.max(10000, Number(config.pollIntervalMs) || 30000));
+  window.setInterval(() => { if (!document.hidden) { if (remoteEnabled) loadRemoteAttendance().then(() => { renderRoster(); if (!$("#admin-view").hidden) renderAdmin(); }).catch(() => {}); else { state.attendance = loadAttendance(); state.lastSaved = loadSavedTimes(); renderRoster(); if (!$("#admin-view").hidden) renderAdmin(); } } }, Math.max(10000, Number(config.pollIntervalMs) || 30000));
 })();
