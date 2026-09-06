@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0b1020" />
+    <meta name="description" content="A small-group GitHub project dashboard." />
+    <title>Orbit · GitHub project dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="./" aria-label="Orbit home">
+          <span class="brand-mark" aria-hidden="true">✦</span>
+          <span>Orbit</span>
+        </a>
+        <div class="topbar-actions">
+          <span class="live-pill"><span class="live-dot"></span> Live sync</span>
+          <a class="icon-link" id="repo-link" href="#" target="_blank" rel="noreferrer">Open repository <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+
+      <main>
+        <section class="hero">
+          <div>
+            <p class="eyebrow">Small group workspace</p>
+            <h1 id="repo-name">Loading repository…</h1>
+            <p class="hero-copy">A calm view of what needs attention, what’s being discussed, and what shipped recently.</p>
+          </div>
+          <div class="hero-actions">
+            <button class="button button-primary" id="new-issue" type="button">＋ New issue</button>
+            <button class="button button-secondary" id="refresh" type="button">↻ Refresh</button>
+          </div>
+        </section>
+
+        <div id="notice" class="notice" role="status" hidden></div>
+
+        <section class="stats-grid" aria-label="Repository overview">
+          <article class="stat-card accent-purple"><span class="stat-label">Open todos</span><strong id="open-count">—</strong><span class="stat-meta">Issues needing attention</span></article>
+          <article class="stat-card accent-teal"><span class="stat-label">Closed</span><strong id="closed-count">—</strong><span class="stat-meta">Completed issues</span></article>
+          <article class="stat-card accent-orange"><span class="stat-label">Questions & requests</span><strong id="question-count">—</strong><span class="stat-meta">Community conversations</span></article>
+          <article class="stat-card accent-blue"><span class="stat-label">Last synced</span><strong id="sync-time">—</strong><span class="stat-meta" id="poll-copy">Every 12 seconds</span></article>
+        </section>
+
+        <div class="content-grid">
+          <section class="panel todos-panel">
+            <div class="panel-heading">
+              <div><p class="eyebrow">The work queue</p><h2>Issues as todos</h2></div>
+              <a class="text-link" id="all-issues" href="#" target="_blank" rel="noreferrer">View all <span aria-hidden="true">→</span></a>
+            </div>
+            <div class="filter-row" role="group" aria-label="Filter issues">
+              <button class="filter active" data-filter="open" type="button">Open</button>
+              <button class="filter" data-filter="closed" type="button">Closed</button>
+              <button class="filter" data-filter="all" type="button">All</button>
+            </div>
+            <div id="issues-list" class="issue-list" aria-live="polite"></div>
+          </section>
+
+          <aside class="panel questions-panel">
+            <div class="panel-heading">
+              <div><p class="eyebrow">Ask the group</p><h2>Questions & requests</h2></div>
+              <span class="count-badge" id="question-badge">—</span>
+            </div>
+            <p class="panel-intro">Open issues tagged <strong>question</strong>, <strong>request</strong>, or <strong>help wanted</strong>.</p>
+            <div id="questions-list" class="question-list" aria-live="polite"></div>
+            <a class="button button-quiet full-width" id="new-question" href="#" target="_blank" rel="noreferrer">＋ Ask a question on GitHub</a>
+            <p class="api-note">GitHub Discussions can require authentication via the public API, so this dashboard uses labeled issues as a token-free alternative.</p>
+          </aside>
+        </div>
+      </main>
+      <footer><span>Orbit is powered by the public GitHub API.</span><span>Updates automatically · <a href="https://docs.github.com/en/rest" target="_blank" rel="noreferrer">API docs ↗</a></span></footer>
+    </div>
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
