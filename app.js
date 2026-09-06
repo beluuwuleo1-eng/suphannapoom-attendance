@@ -12,15 +12,22 @@
   ];
   const $ = (selector) => document.querySelector(selector);
   const storageKey = "suphannapoom-attendance-v1";
+  const savedTimesKey = "suphannapoom-attendance-saved-times-v1";
   const today = new Date();
   const isoDate = (date) => new Date(date).toISOString().slice(0, 10);
   const dateKey = isoDate(today);
-  const state = { selectedClass: classes[0]?.id || "6/1", selectedDate: dateKey, attendance: loadAttendance(), lastSaved: {} };
+  const state = { selectedClass: classes[0]?.id || "6/1", selectedDate: dateKey, attendance: loadAttendance(), lastSaved: loadSavedTimes() };
 
   function loadAttendance() {
     try { return JSON.parse(localStorage.getItem(storageKey) || "{}"); } catch (error) { showToast("อ่านข้อมูลเดิมไม่ได้ จึงเริ่มข้อมูลว่าง"); return {}; }
   }
-  function saveAttendance() { localStorage.setItem(storageKey, JSON.stringify(state.attendance)); }
+  function loadSavedTimes() {
+    try { return JSON.parse(localStorage.getItem(savedTimesKey) || "{}"); } catch (error) { return {}; }
+  }
+  function saveAttendance() {
+    localStorage.setItem(storageKey, JSON.stringify(state.attendance));
+    localStorage.setItem(savedTimesKey, JSON.stringify(state.lastSaved));
+  }
   function rosterFor(classId) {
     const classConfig = classes.find((item) => item.id === classId) || { size: 40 };
     return Array.from({ length: classConfig.size }, (_, index) => ({ id: `${classId}-${index + 1}`, number: index + 1, name: `${config.rosterPrefix || "นักเรียน"} ${index + 1}` }));
@@ -75,6 +82,8 @@
       const recordsForKey = state.attendance[currentKey()] || {};
       recordsForKey[button.dataset.student] = button.dataset.status;
       state.attendance[currentKey()] = recordsForKey;
+      state.lastSaved[currentKey()] = new Date().toISOString();
+      saveAttendance();
       renderRoster();
     }));
     const saved = state.lastSaved[currentKey()];
@@ -84,6 +93,8 @@
     const records = {};
     rosterFor(state.selectedClass).forEach((student) => { if (status) records[student.id] = status; });
     state.attendance[currentKey()] = records;
+    state.lastSaved[currentKey()] = new Date().toISOString();
+    saveAttendance();
     renderRoster();
   }
   function saveCurrent() {
@@ -136,5 +147,5 @@
   $("#admin-date").addEventListener("change", renderAdmin); $("#admin-class").addEventListener("change", renderAdmin); $("#admin-refresh").addEventListener("click", renderAdmin); $("#export-csv").addEventListener("click", exportCsv);
   $("#theme-toggle").addEventListener("click", () => { document.body.classList.toggle("dark"); localStorage.setItem("attendance-theme", document.body.classList.contains("dark") ? "dark" : "light"); });
   if (localStorage.getItem("attendance-theme") === "dark") document.body.classList.add("dark");
-  window.setInterval(() => { if (!document.hidden) { state.attendance = loadAttendance(); renderRoster(); if (!$("#admin-view").hidden) renderAdmin(); } }, Math.max(10000, Number(config.pollIntervalMs) || 30000));
+  window.setInterval(() => { if (!document.hidden) { state.attendance = loadAttendance(); state.lastSaved = loadSavedTimes(); renderRoster(); if (!$("#admin-view").hidden) renderAdmin(); } }, Math.max(10000, Number(config.pollIntervalMs) || 30000));
 })();
