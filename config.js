@@ -7,5 +7,5 @@ window.ATTENDANCE_CONFIG = {
     { id: "6/7", size: 35 }, { id: "6/8", size: 40 },
   ],
   // Replace the placeholder roster in app.js before using the app with real data.
-  rosterPrefix: "นักเรียนตัวอย่าง",
+  rosterPrefix: "นักเรียน",
 };

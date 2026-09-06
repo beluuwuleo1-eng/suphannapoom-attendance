@@ -23,7 +23,7 @@
   function saveAttendance() { localStorage.setItem(storageKey, JSON.stringify(state.attendance)); }
   function rosterFor(classId) {
     const classConfig = classes.find((item) => item.id === classId) || { size: 40 };
-    return Array.from({ length: classConfig.size }, (_, index) => ({ id: `${classId}-${index + 1}`, number: index + 1, name: `${config.rosterPrefix || "นักเรียนตัวอย่าง"} ${String(index + 1).padStart(2, "0")}` }));
+    return Array.from({ length: classConfig.size }, (_, index) => ({ id: `${classId}-${index + 1}`, number: index + 1, name: `${config.rosterPrefix || "นักเรียน"} ${index + 1}` }));
   }
   function currentKey(classId = state.selectedClass, date = state.selectedDate) { return `${date}|${classId}`; }
   function currentRecords(classId = state.selectedClass, date = state.selectedDate) {
